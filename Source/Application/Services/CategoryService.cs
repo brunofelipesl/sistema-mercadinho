@@ -1,3 +1,5 @@
+using Source.Application.Common;
+using Source.Application.Utils;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Repositories;
 using Source.Domain.Interfaces.Services;
@@ -14,17 +16,16 @@ namespace Source.Application.Services
 
         public Task AddCategoryAsync(Category category)
         {
-            if (category == null)
-                throw new ArgumentNullException("[Criação de categoria] - O objeto de categoria não pode ser nulo.");
+            Category categoryToBeAdded = new Category(
+                 EntityUniqueCodeGenerator.GenerateUniqueCode<Category>(),
+                 category.description
+             );
 
-            return _categoryRepository.AddCategoryAsync(category);
+            return _categoryRepository.AddCategoryAsync(categoryToBeAdded);
         }
 
         public Task DeleteCategoryAsync(Category category)
         {
-            if (category == null)
-                throw new ArgumentNullException("[Exclusão de categoria] - O objeto de categoria não pode ser nulo.");
-
             var categoryInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
 
             if (categoryInDatabase == null)
@@ -47,15 +48,28 @@ namespace Source.Application.Services
 
         public Task UpdateCategoryAsync(Category category)
         {
-            if (category == null)
-                throw new ArgumentNullException("[Atualização de categoria] - O objeto de categoria não pode ser nulo.");
-
             var categoryInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
 
             if (categoryInDatabase == null)
                 throw new InvalidOperationException("[Atualização de categoria] - A categoria não foi encontrada.");
 
             return _categoryRepository.UpdateCategoryAsync(category);
+        }
+
+        public ValidationResult ValidateCategory(Category category)
+        {
+            var validationResult = new ValidationResult();
+
+            if (category == null)
+            {
+                validationResult.AddError("[Validação de categoria] - O objeto de categoria não pode ser nulo.");
+                return validationResult;
+            }
+
+            if (string.IsNullOrWhiteSpace(category.description))
+                validationResult.AddError("[Validação de categoria] - A descrição da categoria não pode ser vazio.");
+
+            return validationResult;
         }
     }
 }
