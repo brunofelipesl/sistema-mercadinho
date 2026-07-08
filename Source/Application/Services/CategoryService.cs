@@ -1,4 +1,4 @@
-using Source.Application.Common;
+using Source.Application.Models.Common;
 using Source.Application.Utils;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Repositories;
@@ -14,7 +14,7 @@ namespace Source.Application.Services
             _categoryRepository = categoryRepository;
         }
 
-        public Task AddCategoryAsync(Category category)
+        public Task<Category> AddCategoryAsync(Category category)
         {
             Category categoryToBeAdded = new Category(
                  EntityUniqueCodeGenerator.GenerateUniqueCode<Category>(),
@@ -46,7 +46,7 @@ namespace Source.Application.Services
         }
 
 
-        public Task UpdateCategoryAsync(Category category)
+        public Task<Category> UpdateCategoryAsync(Category category)
         {
             var categoryInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
 

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Source.Application.Models.Common;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Services;
 
@@ -19,7 +20,13 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> GetAllCategories()
         {
             var categories = await _categoryService.GetAllAsync();
-            return Ok(categories);
+            Response<IEnumerable<Category>> response = new Response<IEnumerable<Category>>
+            {
+                Success = true,
+                Data = categories,
+                Errors = new List<string>()
+            };
+            return Ok(response);
         }
 
         [HttpGet]
@@ -31,7 +38,13 @@ namespace Source.Api.Controllers
             {
                 return NotFound();
             }
-            return Ok(category);
+            Response<Category> response = new Response<Category>
+            {
+                Success = true,
+                Data = category,
+                Errors = new List<string>()
+            };
+            return Ok(response);
         }
 
         [HttpPost]
@@ -39,14 +52,19 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> CreateCategory([FromBody] Category category)
         {
             var validationResult = _categoryService.ValidateCategory(category);
+            Response<Category> response = new Response<Category>()
+            {
+                Success = validationResult.IsValid
+            };
             if (!validationResult.IsValid)
             {
-                return BadRequest(validationResult.Errors);
+                response.Errors = [.. validationResult.Errors];
+                return BadRequest(response);
             }
 
-            await _categoryService.AddCategoryAsync(category);
-
-            return CreatedAtAction(nameof(GetCategoryByCode), new { code = category.code }, category);
+            category = await _categoryService.AddCategoryAsync(category);
+            response.Data = category;
+            return Ok(response);
         }
 
         [HttpPut]
@@ -54,28 +72,44 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> UpdateCategory([FromBody] Category category)
         {
             var validationResult = _categoryService.ValidateCategory(category);
+            Response<Category> response = new Response<Category>()
+            {
+                Success = validationResult.IsValid
+            };
             if (!validationResult.IsValid)
             {
-                return BadRequest(validationResult.Errors);
+                response.Errors = [.. validationResult.Errors];
+                return BadRequest(response);
             }
 
-            await _categoryService.UpdateCategoryAsync(category);
-            return NoContent();
+            var updatedCategory = await _categoryService.UpdateCategoryAsync(category);
+            response.Data = updatedCategory;
+            return Ok(response);
         }
 
         [HttpDelete]
         [Route("delete")]
         public async Task<IActionResult> DeleteCategory([FromBody] string categoryCode)
         {
+            Response<Category> response = new Response<Category>();
             if (string.IsNullOrWhiteSpace(categoryCode))
-                return BadRequest("[Exclusão de categoria] - O código da categoria não pode ser nulo ou vazio.");
+            {
+                response.Success = false;
+                response.Errors = new List<string> { "[Exclusão de categoria] - O código da categoria não pode ser nulo ou vazio." };
+                return BadRequest(response);
+            }
 
             var category = await _categoryService.GetByCodeAsync(categoryCode);
             if (category == null)
-                return NotFound("[Exclusão de categoria] - A categoria não foi encontrada.");
+            {
+                response.Success = false;
+                response.Errors = new List<string> { "[Exclusão de categoria] - A categoria não foi encontrada." };
+                return NotFound(response);
+            }
 
             await _categoryService.DeleteCategoryAsync(category);
-            return NoContent();
+            response.Success = true;
+            return Ok(response);
         }
 
     }

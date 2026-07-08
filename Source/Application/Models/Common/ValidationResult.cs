@@ -1,4 +1,4 @@
-namespace Source.Application.Common
+namespace Source.Application.Models.Common
 {
     public class ValidationResult
     {

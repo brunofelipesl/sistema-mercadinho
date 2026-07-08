@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Source.Application.Models.Common;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Services;
 
@@ -19,7 +20,13 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> GetAllSuppliers()
         {
             var suppliers = await _supplierService.GetAllAsync();
-            return Ok(suppliers);
+            Response<IEnumerable<Supplier>> response = new Response<IEnumerable<Supplier>>
+            {
+                Success = true,
+                Data = suppliers,
+                Errors = new List<string>()
+            };
+            return Ok(response);
         }
 
         [HttpGet]
@@ -31,7 +38,13 @@ namespace Source.Api.Controllers
             {
                 return NotFound();
             }
-            return Ok(supplier);
+            Response<Supplier> response = new Response<Supplier>
+            {
+                Success = true,
+                Data = supplier,
+                Errors = new List<string>()
+            };
+            return Ok(response);
         }
 
         [HttpPost]
@@ -41,13 +54,20 @@ namespace Source.Api.Controllers
 
 
             var validationResult = _supplierService.ValidateSupplier(supplier);
+            Response<Supplier> response = new Response<Supplier>()
+            {
+                Success = validationResult.IsValid,
+            };
+
             if (!validationResult.IsValid)
             {
-                return BadRequest(validationResult.Errors);
+                response.Errors = [.. validationResult.Errors];
+                return BadRequest(response);
             }
 
-            await _supplierService.AddSupplierAsync(supplier);
-            return CreatedAtAction(nameof(GetSupplierByCode), new { code = supplier.code }, supplier);
+            supplier = await _supplierService.AddSupplierAsync(supplier);
+            response.Data = supplier;
+            return Ok(response);
         }
 
         [HttpPut]
@@ -56,28 +76,45 @@ namespace Source.Api.Controllers
         {
 
             var validationResult = _supplierService.ValidateSupplier(supplier);
+            Response<Supplier> response = new Response<Supplier>()
+            {
+                Success = validationResult.IsValid,
+            };
             if (!validationResult.IsValid)
             {
-                return BadRequest(validationResult.Errors);
+                response.Errors = [.. validationResult.Errors];
+                return BadRequest(response);
             }
 
-            await _supplierService.UpdateSupplierAsync(supplier);
-            return NoContent();
+            var updatedSupplier = await _supplierService.UpdateSupplierAsync(supplier);
+            response.Data = updatedSupplier;
+            return Ok(response);
         }
 
         [HttpDelete]
         [Route("delete")]
         public async Task<IActionResult> DeleteSupplier([FromBody] string supplierCode)
         {
+            Response<Supplier> response = new Response<Supplier>();
+
             if (string.IsNullOrWhiteSpace(supplierCode))
-                return BadRequest("[Exclusão de fornecedor] - O código do fornecedor não pode ser nulo ou vazio.");
+            {
+                response.Success = false;
+                response.Errors = new List<string> { "[Exclusão de fornecedor] - O código do fornecedor não pode ser nulo ou vazio." };
+                return BadRequest(response);
+            }
 
             var supplier = await _supplierService.GetByCodeAsync(supplierCode);
             if (supplier == null)
-                return NotFound("[Exclusão de fornecedor] - O fornecedor não foi encontrado.");
+            {
+                response.Success = false;
+                response.Errors = new List<string> { "[Exclusão de fornecedor] - O fornecedor não foi encontrado." };
+                return NotFound(response);
+            }
 
             await _supplierService.DeleteSupplierAsync(supplier);
-            return NoContent();
+            response.Success = true;
+            return Ok(response);
         }
     }
 }

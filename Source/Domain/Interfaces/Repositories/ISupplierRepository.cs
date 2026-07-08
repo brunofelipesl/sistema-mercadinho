@@ -6,8 +6,8 @@ namespace Source.Domain.Interfaces.Repositories
     {
         public Task<Supplier> GetByCodeAsync(string code);
         public Task<IEnumerable<Supplier>> GetAllAsync();
-        public Task AddSupplierAsync(Supplier supplier);
-        public Task UpdateSupplierAsync(Supplier supplier);
+        public Task<Supplier> AddSupplierAsync(Supplier supplier);
+        public Task<Supplier> UpdateSupplierAsync(Supplier supplier);
         public Task DeleteSupplierAsync(Supplier supplier);
     }
 }
