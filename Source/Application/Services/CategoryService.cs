@@ -26,9 +26,9 @@ namespace Source.Application.Services
 
         public Task DeleteCategoryAsync(Category category)
         {
-            var categoryInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
+            var categoriesInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
 
-            if (categoryInDatabase == null)
+            if (categoriesInDatabase == null || !categoriesInDatabase.Any())
                 throw new InvalidOperationException("[Exclusão de categoria] - A categoria não foi encontrada.");
 
             return _categoryRepository.DeleteCategoryAsync(category);
@@ -41,16 +41,19 @@ namespace Source.Application.Services
 
         public Task<Category> GetByCodeAsync(string code)
         {
-            return _categoryRepository.GetByCodeAsync(code)
-            ?? throw new InvalidOperationException("[Consulta de categoria] - A categoria não foi encontrada.");
+            var categories = _categoryRepository.GetByCodeAsync(code).Result;
+            if (categories == null || !categories.Any())
+                throw new InvalidOperationException("[Consulta de categoria] - A categoria não foi encontrada.");
+
+            return Task.FromResult(categories.First());
         }
 
 
         public Task<Category> UpdateCategoryAsync(Category category)
         {
-            var categoryInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
+            var categoriesInDatabase = _categoryRepository.GetByCodeAsync(category.code).Result;
 
-            if (categoryInDatabase == null)
+            if (categoriesInDatabase == null || !categoriesInDatabase.Any())
                 throw new InvalidOperationException("[Atualização de categoria] - A categoria não foi encontrada.");
 
             return _categoryRepository.UpdateCategoryAsync(category);

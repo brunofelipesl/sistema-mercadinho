@@ -25,8 +25,8 @@ namespace Source.Application.Services
 
         public Task DeleteSupplierAsync(Supplier supplier)
         {
-            Supplier supplierInDatabase = _supplierRepository.GetByCodeAsync(supplier.code).Result;
-            if (supplierInDatabase == null)
+            var suppliersInDatabase = _supplierRepository.GetByCodeAsync(supplier.code).Result;
+            if (suppliersInDatabase == null || !suppliersInDatabase.Any())
                 throw new InvalidOperationException("[Exclusão de fornecedor] - O fornecedor não foi encontrado.");
 
             return _supplierRepository.DeleteSupplierAsync(supplier);
@@ -39,14 +39,17 @@ namespace Source.Application.Services
 
         public Task<Supplier> GetByCodeAsync(string code)
         {
-            return _supplierRepository.GetByCodeAsync(code)
-            ?? throw new InvalidOperationException("[Consulta de fornecedor] - O fornecedor não foi encontrado.");
+            var suppliers = _supplierRepository.GetByCodeAsync(code).Result;
+            if (suppliers == null || !suppliers.Any())
+                throw new InvalidOperationException("[Consulta de fornecedor] - O fornecedor não foi encontrado.");
+
+            return Task.FromResult(suppliers.First());
         }
 
         public Task<Supplier> UpdateSupplierAsync(Supplier supplier)
         {
-            Supplier supplierInDatabase = _supplierRepository.GetByCodeAsync(supplier.code).Result;
-            if (supplierInDatabase == null)
+            var suppliersInDatabase = _supplierRepository.GetByCodeAsync(supplier.code).Result;
+            if (suppliersInDatabase == null || !suppliersInDatabase.Any())
                 throw new InvalidOperationException("[Atualização de fornecedor] - O fornecedor não foi encontrado.");
             return _supplierRepository.UpdateSupplierAsync(supplier);
         }

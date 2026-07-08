@@ -35,7 +35,7 @@ namespace Source.Application.Services
         {
             var productInDatabase = _productRepository.GetByCodeAsync(product.code).Result;
 
-            if (productInDatabase == null)
+            if (productInDatabase == null || !productInDatabase.Any())
                 throw new InvalidOperationException("[Exclusão de produto] - O produto não foi encontrado.");
 
             return _productRepository.DeleteProductAsync(product);
@@ -48,15 +48,18 @@ namespace Source.Application.Services
 
         public Task<Product> GetByCodeAsync(string code)
         {
-            return _productRepository.GetByCodeAsync(code)
-                ?? throw new InvalidOperationException("[Consulta de produto] - O produto não foi encontrado.");
+            var products = _productRepository.GetByCodeAsync(code).Result;
+            if (products == null || !products.Any())
+                throw new InvalidOperationException("[Consulta de produto] - O produto não foi encontrado.");
+
+            return Task.FromResult(products.First());
         }
 
         public Task<Product> UpdateProductAsync(Product product)
         {
             var productInDatabase = _productRepository.GetByCodeAsync(product.code).Result;
 
-            if (productInDatabase == null)
+            if (productInDatabase == null || !productInDatabase.Any())
                 throw new InvalidOperationException("[Atualização de produto] - O produto não foi encontrado.");
 
             return _productRepository.UpdateProductAsync(product);
@@ -74,6 +77,24 @@ namespace Source.Application.Services
 
             if (string.IsNullOrWhiteSpace(product.description))
                 validationResult.AddError("[Validação de produto] - A descrição do produto não pode ser vazia.");
+
+            if (product.categories == null || !product.categories.Any())
+                validationResult.AddError("[Validação de produto] - O produto deve ter pelo menos uma categoria associada.");
+
+            if (product.suppliers == null || !product.suppliers.Any())
+                validationResult.AddError("[Validação de produto] - O produto deve ter pelo menos um fornecedor associado.");
+
+            if (product.sellingPrice <= 0)
+                validationResult.AddError("[Validação de produto] - O preço de venda do produto deve ser maior que zero.");
+
+            if (product.replacementCost <= 0)
+                validationResult.AddError("[Validação de produto] - O custo de reposição do produto deve ser maior que zero.");
+
+            if (product.expirationDate <= DateTime.Now)
+                validationResult.AddError("[Validação de produto] - A data de validade do produto deve ser uma data futura.");
+
+            if (product.stockQuantity < 0)
+                validationResult.AddError("[Validação de produto] - A quantidade em estoque do produto não pode ser negativa.");
 
             return validationResult;
         }
