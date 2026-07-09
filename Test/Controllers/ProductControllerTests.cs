@@ -14,7 +14,7 @@ public class ProductControllerTests
     public async Task GetAllProducts_ShouldReturnOkWithResponse()
     {
         var service = new Mock<IProductService>();
-        service.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Product> { new("P1", "Café", new List<Category> { new("C1", "Bebidas") }, new List<Supplier> { new("S1", "Mercado") }, 10m, 6m, DateTime.Now.AddDays(30), 20) });
+        service.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Product> { new("P1", "Café", 10m, 6m, DateTime.Now.AddDays(30), 20) { categories = new List<Category> { new("C1", "Bebidas") }, suppliers = new List<Supplier> { new("S1", "Mercado") } } });
         var controller = new ProductController(service.Object);
 
         var result = await controller.GetAllProducts();
@@ -34,7 +34,7 @@ public class ProductControllerTests
         service.Setup(s => s.ValidateProduct(It.IsAny<Product>())).Returns(validationResult);
         var controller = new ProductController(service.Object);
 
-        var result = await controller.CreateProduct(new Product("P1", "   ", new List<Category>(), new List<Supplier>(), 0m, 0m, DateTime.Now.AddDays(-1), -1));
+        var result = await controller.CreateProduct(new Product("P1", "   ", 0m, 0m, DateTime.Now.AddDays(-1), -1));
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         var response = Assert.IsType<Response<Product>>(badRequest.Value);

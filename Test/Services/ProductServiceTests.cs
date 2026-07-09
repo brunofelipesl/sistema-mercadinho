@@ -16,7 +16,7 @@ public class ProductServiceTests
         var product = CreateValidProduct();
 
         repository.Setup(r => r.AddProductAsync(It.IsAny<Product>()))
-            .ReturnsAsync(new Product("P12345", "Café", new List<Category> { new("C1", "Bebidas") }, new List<Supplier> { new("S1", "Mercado") }, 10m, 6m, DateTime.Now.AddDays(30), 20));
+            .ReturnsAsync(new Product("P12345", "Café", 10m, 6m, DateTime.Now.AddDays(30), 20) { categories = new List<Category> { new("C1", "Bebidas") }, suppliers = new List<Supplier> { new("S1", "Mercado") } });
 
         var result = await service.AddProductAsync(product);
 
@@ -31,7 +31,7 @@ public class ProductServiceTests
         var repository = new Mock<IProductRepository>();
         var service = new ProductService(repository.Object);
 
-        var result = service.ValidateProduct(new Product("P1", "   ", null!, null!, 0m, 0m, DateTime.Now.AddDays(-1), -1));
+        var result = service.ValidateProduct(new Product("P1", "   ", 0m, 0m, DateTime.Now.AddDays(-1), -1) { categories = null, suppliers = null });
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.Contains("descrição"));
@@ -62,11 +62,13 @@ public class ProductServiceTests
         return new Product(
             "",
             "Café",
-            new List<Category> { new("C1", "Bebidas") },
-            new List<Supplier> { new("S1", "Mercado") },
             10m,
             6m,
             DateTime.Now.AddDays(30),
-            20);
+            20)
+        {
+            categories = new List<Category> { new("C1", "Bebidas") },
+            suppliers = new List<Supplier> { new("S1", "Mercado") }
+        };
     }
 }

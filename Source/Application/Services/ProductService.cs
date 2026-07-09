@@ -20,13 +20,15 @@ namespace Source.Application.Services
             Product productToBeAdded = new Product(
                 EntityUniqueCodeGenerator.GenerateUniqueCode<Product>(),
                 product.description,
-                product.categories,
-                product.suppliers,
                 product.sellingPrice,
                 product.replacementCost,
                 product.expirationDate,
                 product.stockQuantity
-            );
+            )
+            {
+                categories = product.categories,
+                suppliers = product.suppliers
+            };
 
             return _productRepository.AddProductAsync(productToBeAdded);
         }
