@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Source.Api.Controllers;
 using Source.Application.Models.Common;
+using Source.Application.Models.DTOs;
+using Source.Application.Utils.Extensions;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Services;
 using Xunit;
@@ -20,7 +22,7 @@ public class SupplierControllerTests
         var result = await controller.GetAllSuppliers();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<Response<IEnumerable<Supplier>>>(okResult.Value);
+        var response = Assert.IsType<Response<IEnumerable<SupplierDTO>>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
     }
@@ -34,10 +36,10 @@ public class SupplierControllerTests
         service.Setup(s => s.ValidateSupplier(It.IsAny<Supplier>())).Returns(validationResult);
         var controller = new SupplierController(service.Object);
 
-        var result = await controller.CreateSupplier(new Supplier("S1", "   "));
+        var result = await controller.CreateSupplier(new SupplierDTO { Code = "S1", Name = "   " });
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-        var response = Assert.IsType<Response<Supplier>>(badRequest.Value);
+        var response = Assert.IsType<Response<SupplierDTO>>(badRequest.Value);
         Assert.False(response.Success);
     }
 }

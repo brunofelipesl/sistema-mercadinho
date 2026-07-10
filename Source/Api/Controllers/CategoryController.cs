@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Source.Application.Models.Common;
-using Source.Domain.Entitites;
+using Source.Application.Models.DTOs;
+using Source.Application.Utils.Extensions;
 using Source.Domain.Interfaces.Services;
 
 namespace Source.Api.Controllers
@@ -22,10 +23,10 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> GetAllCategories()
         {
             var categories = await _categoryService.GetAllAsync();
-            Response<IEnumerable<Category>> response = new Response<IEnumerable<Category>>
+            Response<IEnumerable<CategoryDTO>> response = new Response<IEnumerable<CategoryDTO>>
             {
                 Success = true,
-                Data = categories,
+                Data = categories.ToDTO(),
                 Errors = new List<string>()
             };
             return Ok(response);
@@ -40,10 +41,10 @@ namespace Source.Api.Controllers
             {
                 return NotFound();
             }
-            Response<Category> response = new Response<Category>
+            Response<CategoryDTO> response = new Response<CategoryDTO>
             {
                 Success = true,
-                Data = category,
+                Data = category.ToDTO(),
                 Errors = new List<string>()
             };
             return Ok(response);
@@ -51,10 +52,11 @@ namespace Source.Api.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task<IActionResult> CreateCategory([FromBody] Category category)
+        public async Task<IActionResult> CreateCategory([FromBody] CategoryDTO categoryDTO)
         {
+            var category = categoryDTO.ToEntity();
             var validationResult = _categoryService.ValidateCategory(category);
-            Response<Category> response = new Response<Category>()
+            Response<CategoryDTO> response = new Response<CategoryDTO>()
             {
                 Success = validationResult.IsValid
             };
@@ -64,17 +66,18 @@ namespace Source.Api.Controllers
                 return BadRequest(response);
             }
 
-            category = await _categoryService.AddCategoryAsync(category);
-            response.Data = category;
+            var createdCategory = await _categoryService.AddCategoryAsync(category);
+            response.Data = createdCategory.ToDTO();
             return Ok(response);
         }
 
         [HttpPut]
         [Route("update")]
-        public async Task<IActionResult> UpdateCategory([FromBody] Category category)
+        public async Task<IActionResult> UpdateCategory([FromBody] CategoryDTO categoryDTO)
         {
+            var category = categoryDTO.ToEntity();
             var validationResult = _categoryService.ValidateCategory(category);
-            Response<Category> response = new Response<Category>()
+            Response<CategoryDTO> response = new Response<CategoryDTO>()
             {
                 Success = validationResult.IsValid
             };
@@ -85,7 +88,7 @@ namespace Source.Api.Controllers
             }
 
             var updatedCategory = await _categoryService.UpdateCategoryAsync(category);
-            response.Data = updatedCategory;
+            response.Data = updatedCategory.ToDTO();
             return Ok(response);
         }
 
@@ -93,7 +96,7 @@ namespace Source.Api.Controllers
         [Route("delete")]
         public async Task<IActionResult> DeleteCategory([FromBody] string categoryCode)
         {
-            Response<Category> response = new Response<Category>();
+            Response<CategoryDTO> response = new Response<CategoryDTO>();
             if (string.IsNullOrWhiteSpace(categoryCode))
             {
                 response.Success = false;

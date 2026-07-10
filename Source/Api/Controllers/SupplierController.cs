@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Source.Application.Models.Common;
-using Source.Domain.Entitites;
+using Source.Application.Models.DTOs;
+using Source.Application.Utils.Extensions;
 using Source.Domain.Interfaces.Services;
 
 namespace Source.Api.Controllers
@@ -22,10 +23,10 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> GetAllSuppliers()
         {
             var suppliers = await _supplierService.GetAllAsync();
-            Response<IEnumerable<Supplier>> response = new Response<IEnumerable<Supplier>>
+            Response<IEnumerable<SupplierDTO>> response = new Response<IEnumerable<SupplierDTO>>
             {
                 Success = true,
-                Data = suppliers,
+                Data = suppliers.ToDTO(),
                 Errors = new List<string>()
             };
             return Ok(response);
@@ -40,10 +41,10 @@ namespace Source.Api.Controllers
             {
                 return NotFound();
             }
-            Response<Supplier> response = new Response<Supplier>
+            Response<SupplierDTO> response = new Response<SupplierDTO>
             {
                 Success = true,
-                Data = supplier,
+                Data = supplier.ToDTO(),
                 Errors = new List<string>()
             };
             return Ok(response);
@@ -51,12 +52,11 @@ namespace Source.Api.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task<IActionResult> CreateSupplier([FromBody] Supplier supplier)
+        public async Task<IActionResult> CreateSupplier([FromBody] SupplierDTO supplierDTO)
         {
-
-
+            var supplier = supplierDTO.ToEntity();
             var validationResult = _supplierService.ValidateSupplier(supplier);
-            Response<Supplier> response = new Response<Supplier>()
+            Response<SupplierDTO> response = new Response<SupplierDTO>()
             {
                 Success = validationResult.IsValid,
             };
@@ -67,18 +67,18 @@ namespace Source.Api.Controllers
                 return BadRequest(response);
             }
 
-            supplier = await _supplierService.AddSupplierAsync(supplier);
-            response.Data = supplier;
+            var createdSupplier = await _supplierService.AddSupplierAsync(supplier);
+            response.Data = createdSupplier.ToDTO();
             return Ok(response);
         }
 
         [HttpPut]
         [Route("update")]
-        public async Task<IActionResult> UpdateSupplier([FromBody] Supplier supplier)
+        public async Task<IActionResult> UpdateSupplier([FromBody] SupplierDTO supplierDTO)
         {
-
+            var supplier = supplierDTO.ToEntity();
             var validationResult = _supplierService.ValidateSupplier(supplier);
-            Response<Supplier> response = new Response<Supplier>()
+            Response<SupplierDTO> response = new Response<SupplierDTO>()
             {
                 Success = validationResult.IsValid,
             };
@@ -89,7 +89,7 @@ namespace Source.Api.Controllers
             }
 
             var updatedSupplier = await _supplierService.UpdateSupplierAsync(supplier);
-            response.Data = updatedSupplier;
+            response.Data = updatedSupplier.ToDTO();
             return Ok(response);
         }
 
@@ -97,7 +97,7 @@ namespace Source.Api.Controllers
         [Route("delete")]
         public async Task<IActionResult> DeleteSupplier([FromBody] string supplierCode)
         {
-            Response<Supplier> response = new Response<Supplier>();
+            Response<SupplierDTO> response = new Response<SupplierDTO>();
 
             if (string.IsNullOrWhiteSpace(supplierCode))
             {

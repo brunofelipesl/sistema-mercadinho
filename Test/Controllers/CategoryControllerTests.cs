@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Source.Api.Controllers;
 using Source.Application.Models.Common;
+using Source.Application.Models.DTOs;
+using Source.Application.Utils.Extensions;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Services;
 using Xunit;
@@ -20,7 +22,7 @@ public class CategoryControllerTests
         var result = await controller.GetAllCategories();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<Response<IEnumerable<Category>>>(okResult.Value);
+        var response = Assert.IsType<Response<IEnumerable<CategoryDTO>>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
     }
@@ -34,10 +36,10 @@ public class CategoryControllerTests
         service.Setup(s => s.ValidateCategory(It.IsAny<Category>())).Returns(validationResult);
         var controller = new CategoryController(service.Object);
 
-        var result = await controller.CreateCategory(new Category("C1", "   "));
+        var result = await controller.CreateCategory(new CategoryDTO { Code = "C1", Description = "   " });
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-        var response = Assert.IsType<Response<Category>>(badRequest.Value);
+        var response = Assert.IsType<Response<CategoryDTO>>(badRequest.Value);
         Assert.False(response.Success);
     }
 }

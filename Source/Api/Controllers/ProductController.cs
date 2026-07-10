@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Source.Application.Models.Common;
-using Source.Domain.Entitites;
+using Source.Application.Models.DTOs;
+using Source.Application.Utils.Extensions;
 using Source.Domain.Interfaces.Services;
 
 namespace Source.Api.Controllers
@@ -23,10 +24,10 @@ namespace Source.Api.Controllers
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productService.GetAllAsync();
-            Response<IEnumerable<Product>> response = new Response<IEnumerable<Product>>
+            Response<IEnumerable<ProductDTO>> response = new Response<IEnumerable<ProductDTO>>
             {
                 Success = true,
-                Data = products,
+                Data = products.ToDTO(),
                 Errors = new List<string>()
             };
             return Ok(response);
@@ -42,10 +43,10 @@ namespace Source.Api.Controllers
                 return NotFound();
             }
 
-            Response<Product> response = new Response<Product>
+            Response<ProductDTO> response = new Response<ProductDTO>
             {
                 Success = true,
-                Data = product,
+                Data = product.ToDTO(),
                 Errors = new List<string>()
             };
             return Ok(response);
@@ -53,10 +54,11 @@ namespace Source.Api.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task<IActionResult> CreateProduct([FromBody] Product product)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductDTO productDTO)
         {
+            var product = productDTO.ToEntity();
             var validationResult = _productService.ValidateProduct(product);
-            Response<Product> response = new Response<Product>
+            Response<ProductDTO> response = new Response<ProductDTO>
             {
                 Success = validationResult.IsValid
             };
@@ -67,17 +69,18 @@ namespace Source.Api.Controllers
                 return BadRequest(response);
             }
 
-            product = await _productService.AddProductAsync(product);
-            response.Data = product;
+            var createdProduct = await _productService.AddProductAsync(product);
+            response.Data = createdProduct.ToDTO();
             return Ok(response);
         }
 
         [HttpPut]
         [Route("update")]
-        public async Task<IActionResult> UpdateProduct([FromBody] Product product)
+        public async Task<IActionResult> UpdateProduct([FromBody] ProductDTO productDTO)
         {
+            var product = productDTO.ToEntity();
             var validationResult = _productService.ValidateProduct(product);
-            Response<Product> response = new Response<Product>
+            Response<ProductDTO> response = new Response<ProductDTO>
             {
                 Success = validationResult.IsValid
             };
@@ -89,7 +92,7 @@ namespace Source.Api.Controllers
             }
 
             var updatedProduct = await _productService.UpdateProductAsync(product);
-            response.Data = updatedProduct;
+            response.Data = updatedProduct.ToDTO();
             return Ok(response);
         }
 
@@ -97,7 +100,7 @@ namespace Source.Api.Controllers
         [Route("delete")]
         public async Task<IActionResult> DeleteProduct([FromBody] string productCode)
         {
-            Response<Product> response = new Response<Product>();
+            Response<ProductDTO> response = new Response<ProductDTO>();
 
             if (string.IsNullOrWhiteSpace(productCode))
             {

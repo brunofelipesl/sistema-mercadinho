@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Source.Api.Controllers;
 using Source.Application.Models.Common;
+using Source.Application.Models.DTOs;
+using Source.Application.Utils.Extensions;
 using Source.Domain.Entitites;
 using Source.Domain.Interfaces.Services;
 using Xunit;
@@ -20,7 +22,7 @@ public class ProductControllerTests
         var result = await controller.GetAllProducts();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<Response<IEnumerable<Product>>>(okResult.Value);
+        var response = Assert.IsType<Response<IEnumerable<ProductDTO>>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
     }
@@ -34,10 +36,22 @@ public class ProductControllerTests
         service.Setup(s => s.ValidateProduct(It.IsAny<Product>())).Returns(validationResult);
         var controller = new ProductController(service.Object);
 
-        var result = await controller.CreateProduct(new Product("P1", "   ", 0m, 0m, DateTime.Now.AddDays(-1), -1));
+        var productDTO = new ProductDTO
+        {
+            Code = "P1",
+            Description = "   ",
+            SellingPrice = 0m,
+            ExpirationDate = DateTime.Now.AddDays(-1),
+            ReplacementCost = 0m,
+            StockQuantity = -1,
+            Categories = new List<CategoryDTO>(),
+            Suppliers = new List<SupplierDTO>()
+        };
+
+        var result = await controller.CreateProduct(productDTO);
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-        var response = Assert.IsType<Response<Product>>(badRequest.Value);
+        var response = Assert.IsType<Response<ProductDTO>>(badRequest.Value);
         Assert.False(response.Success);
     }
 }
