@@ -26,7 +26,7 @@ namespace Source.Api.Controllers
             Response<IEnumerable<CategoryDTO>> response = new Response<IEnumerable<CategoryDTO>>
             {
                 Success = true,
-                Data = categories.ToDTO(),
+                Data = categories.ToDTO().OrderBy(c => c.Description).ToList(),
                 Errors = new List<string>()
             };
             return Ok(response);

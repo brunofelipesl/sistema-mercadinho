@@ -27,7 +27,7 @@ namespace Source.Api.Controllers
             Response<IEnumerable<ProductDTO>> response = new Response<IEnumerable<ProductDTO>>
             {
                 Success = true,
-                Data = products.ToDTO(),
+                Data = products.ToDTO().OrderBy(p => p.Description).ToList(),
                 Errors = new List<string>()
             };
             return Ok(response);

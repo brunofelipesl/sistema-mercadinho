@@ -26,7 +26,7 @@ namespace Source.Api.Controllers
             Response<IEnumerable<SupplierDTO>> response = new Response<IEnumerable<SupplierDTO>>
             {
                 Success = true,
-                Data = suppliers.ToDTO(),
+                Data = suppliers.ToDTO().OrderBy(s => s.Name).ToList(),
                 Errors = new List<string>()
             };
             return Ok(response);
