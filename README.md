@@ -13,5 +13,6 @@ docker compose up --build
 ```
 
 | Serviço  | URL                   |
+| -------- | ----------------------|
 | API      | http://localhost:5203 |
 | Postgres | localhost:5432        |
